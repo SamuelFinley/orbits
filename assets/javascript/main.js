@@ -49,12 +49,13 @@ let planets = {
         //1497877200
         //1490277600
         //1231890960
+        infCon: 1925700,
         τ: 1513079280,
         e: 0.205630,
         a_km: 57909050,
         rc: '',
         ε: 0,
-        θ: 0
+        Δθ: 0
     },
     venus: {
         angMo: 1.8,
@@ -71,9 +72,11 @@ let planets = {
         angMo: 1.8,
         angMo_exp: 40,
         massKg: 4.87,
+        mass: 5.97237 * Math.pow(10, 24),
         mass_exp: 24,
-        e: 0.006772,
-        a_km: 57909050,
+        e: 0.0167086,
+        a_km: 149598023,
+        T: 365.256363004,
         rc: '',
         ε: 0,
         θ: 0,
@@ -91,54 +94,49 @@ return trueA;
 
 function meanAnom (planet) {
     let t = new Date();
-    let tnow = t.getTime();
-    let secs = 3600 * 365.256 * 24
-    console.log(secs)
-    let Δτ = ((tnow / 1000) - planet.τ) / 31558118.4;//31556926
-    let n = 2 * Math.PI / period(planet);
+    let tnow = t.getTime();//85000 on 4/26
+    let tnew = tnow + 85000//tnow * 5.508963* 10**(-8);//5.5089632237879476e-8
+    let Δτ = ((tnew  / 1000) - planet.τ)
     let μ = 4 * Math.PI**2 * planet.a_km**3 / period(planet)**2
-    //let n = Math.pow(.5, (μ / (planet.a_km * 1000)**3));
-    planet.M = n * Δτ;
-    planet.E = planet.M + (planet.e - (planet.e**3)/8)*Math.sin(planet.M) + .5*planet.e*planet.e*Math.sin(2*planet.M) + (3/8)*(planet.e**3)*Math.sin(3 * planet.M)  
-    console.log(planet.M)
-    //console.log(planet.a_km**3)
-    //cosE = (e + costhet)/(1 + ecosthet)
+    planet.M = 2 * Math.PI * (Δτ / period (planet));
+    //planet.Δθ = 2*planet.e * Math.sin(planet.M) + 5/4 * planet.e**2 * Math.sin(2 * planet.M);
+    planet.E = planet.M + (planet.e - (planet.e**3)/8)*Math.sin(planet.M) + .5*planet.e*planet.e*Math.sin(2*planet.M) + (3/8)*(planet.e**3)*Math.sin(3 * planet.M);
 }
 
 function period (planet) {
-    //p = a(1-e^2)
-    //let T = 2 * Math.PI * (planet.a_km * (1-planet.e**2))**(3 / 2) / (planet.mass * c_ms**2 * (1 - planet.e**2)**3)**(.5) / 1000;
-    //let T = 2 * Math.PI * planet.a_km**(3 / 2) / (G * (M_kg + planet.mass))**(.5) / 1000;
-    let T = 0.240846;
+    // let a = new Date('June 6, 2018 10:14:00');
+    // let b = new Date('March 10, 2018 10:58:00');
+    // let a1 = a.getTime();
+    // let b1 = b.getTime();
+    //let T = (a1 - b1)/1000
+    let T = 7600560 
     //console.log(T);
     return T;
 }
 
-function rc (planet) {
-    // planet.rc = ((planet.angMo / planet.massKg) * Math.pow(10, (planet.angMo_exp - planet.mass_exp)));
-    let l = ((planet.angMo / planet.massKg) * Math.pow(10, (planet.angMo_exp - planet.mass_exp)));
-    let rc = l**2 / (G * M_kg);
-    relaCorrect (planet);
-    planet.rc = .5 * rc + .5 * rc * (1 - 12 * planet.ε);
-}
+// function rc (planet) {
+//     let l = ((planet.angMo / planet.massKg) * Math.pow(10, (planet.angMo_exp - planet.mass_exp)));
+//     let rc = l**2 / (G * M_kg);
+//     relaCorrect (planet);
+//     planet.rc = .5 * rc + .5 * rc * (1 - 12 * planet.ε);
+// }
 
 function relaCorrect (planet) {
     planet.ε = (G * M_kg) / ((c_ms**2) * planet.a_km* 1000 * (1 - planet.e**2));
 }
 
 function rOrbit (planet) {
-    rc (planet);
     meanAnom(planet);
     let anom = trueAnom(planet);
     let ε = planet.ε;
-    //console.log(ε * 10**(8))
-    //rc(1-3ε)/r = 1 + e(1 + 3ε)cos(1 - 3ε)θ
-    //r/a = 1 + 1/2e^2(1-3ε) - ecosM' - 1/2e^2(1-3ε)cos2M'-3eεM'sinM' - 3εe^2M'sinM'
-    //let r = planet.rc * (1 - 3 * ε) / (1 + planet.e * (1 + 3 * ε) * Math.cos(1 - 3 * ε) * planet.θ)
-    let r = planet.a_km * (1 + (planet.e**2) * (1 - 3 * planet.ε) / 2 - planet.e * Math.cos(planet.M) - (planet.e**2) * (1 - 3 * planet.ε) / 2 * Math.cos(2*planet.M) - 3 * planet.e * planet.ε * planet.M * Math.sin(planet.M) - 3 * planet.ε * (planet.e**2) * planet.M * Math.sin(planet.M));
-    //let r = planet.rc * (1 - ε) / (1 + e*(1 + ε) * Math.cos(1 - ε)*planet.θ)
-    //console.log(planet.rc)
-    console.log(r)
+    //let r = planet.a_km * (1 + (planet.e**2) * (1 - 3 * planet.ε) / 2 - planet.e * Math.cos(planet.M) - (planet.e**2) * (1 - 3 * planet.ε) / 2 * Math.cos(2*planet.M) - 3 * planet.e * planet.ε * planet.M * Math.sin(planet.M) - 3 * planet.ε * (planet.e**2) * planet.M * Math.sin(planet.M));
+    let r = planet.a_km * (1-planet.e*Math.cos(planet.E));
+    rScreen = r/(7.5 * 10**7);
+    let x = rScreen * Math.cos(planet.M) ;
+    let y = rScreen * Math.sin(planet.M);
+    $('#mercury').css('top', y * 5 + 50 + '%');
+    $('#mercury').css('left', x * 5 + 50 + '%');
+    console.log(r);
 }
 
 function perihelion (planet) {
@@ -156,11 +154,7 @@ function Δφ (planet) {
 }
  
 $('#submit').click(() => {
-    var d = new Date();
-    var n = d.getTime();
-    rOrbit(planets.mercury);
-    planets.mercury.θ += (2 * Math.PI) / 10;
-    console.log(n)
-    perihelion(planets.mercury);
+    window.setInterval(rOrbit, 5000, planets.mercury);
+    //perihelion(planets.mercury);
 })
 });
